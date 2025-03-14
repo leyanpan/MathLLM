@@ -11,7 +11,7 @@ def get_project_and_lean_path():
     p = subprocess.check_output(['lake', 'env', 'printenv', 'LEAN_PATH'], cwd=cwd)
     return cwd, p
 
-def next_tactic(self, state):
+def next_tactic(state):
     tokenized_state = tokenizer(str(state), return_tensors="pt")
 
     tactic_candidates_ids = model.generate(
