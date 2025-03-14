@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 from pantograph.server import Server
 import requests
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+#from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 def get_project_and_lean_path():
     cwd = Path(__file__).parent.resolve() / 'MathlibProject'
