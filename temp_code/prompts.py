@@ -20,14 +20,14 @@ Correct Solution: {correct_solution_text}
 
 Wrong Solution: {wrong_solution_text}"""
 
-SOLVE_MATH_PROBLEM_STEP = """Solve the following math problem step by step. Whenever a step is finished, output a special delimiter </step> to indicate the end of the step. Do not output this delimiter other than when completing a step. 
+SOLVE_MATH_PROBLEM_STEP = """Solve the following math problem step by step. Whenever a step is finished, output a special delimiter </step> to indicate the end of the step. Do not output this delimiter other than when completing a step.
 Put the final answer in \\boxed{{}}.
 
 Problem: {problem}"""
 
 AUTOFORMALIZE_STEP = """Please formalize the next proof step in Lean 4. The step should be in the form of a 'have' statement. The 'have' statement must have 'sorry' appended. The 'ans' is a placeholder holding the answer. Think carefully about how to make the formalization valid. Then, put your formalized lean code inside a lean code block. ONLY place the 'have' statement in your response, so that it may be cleanly appended to the proof.
 
-PROOF: 
+PROOF:
 {proof}
 
 NEXT HAVE:
@@ -104,7 +104,7 @@ EXAMPLE_AIME_PROBLEM = """Let $x$, $y$, and $z$ all exceed $1$ and let $w$ be a 
 
 
 
-steps_raw_old="""I'll solve this problem step by step, following your instructions to use the delimiter </step> at the end of each step and to put the final answer in a boxed format.
+STEPS_RAW_OLD="""I'll solve this problem step by step, following your instructions to use the delimiter </step> at the end of each step and to put the final answer in a boxed format.
 
 Let's begin by recalling the logarithm properties I'll need:
 - $\log_a(b) = \frac{\log_c(b)}{\log_c(a)}$ for any base $c$
@@ -215,7 +215,7 @@ Now use \(40 \ln y = 12(\ln x + \ln y + \ln z)\):
 \[
 28 \ln y = 12 (\ln x + \ln z)
 \]
--/ 
+-/
 /- TACTIC STATE:
 x y z w : ℝ
 hx : x > 1
@@ -250,7 +250,7 @@ theorem problem (hx : x > 1) (hy : y > 1) (hz : z > 1) (hw : w > 0)
 
 
 
-steps_raw="""We are given the following:
+STEPS_RAW="""We are given the following:
 \[
 \log_x w = 24
 \]

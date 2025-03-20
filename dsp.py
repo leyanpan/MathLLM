@@ -1,17 +1,35 @@
 from openai import OpenAI
+import anthropic
 import re
 import math
 import random
 
 import prompts
+from config_utils import get_api_key, load_config
 
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.live import Live
 
-# model = 'deepseek-reasoner'
-model = 'gpt-4o'
+# Load config
+try:
+    config = load_config()
+    model = config.get('default_model', 'gpt-4o')
+except FileNotFoundError:
+    model = 'gpt-4o'
+
+# Initialize client based on model
 if model.startswith('deepseek'):
-    client = OpenAI(api_key="", base_url="https://api.deepseek.com")
+    client = OpenAI(
+        api_key=get_api_key('deepseek', config),
+        base_url="https://api.deepseek.com"
+    )
+elif model.startswith('claude'):
+    client = anthropic.Anthropic(
+        api_key=get_api_key('anthropic', config)
+    )
 else:
-    client = OpenAI(api_key="")
+    client = OpenAI(api_key=get_api_key('openai', config))
 
 def extract_answer_value(text):
     """Extracts numeric value from <answer> tags with robust parsing."""
@@ -28,7 +46,7 @@ def extract_steps(response_text):
     steps = re.split(r'\s*</step>\s*', response_text.strip())  # Split on the delimiter
     return [step.strip() for step in steps if step.strip()]  # Remove empty entries
 
-def solve_math_problem_stepwise(problem, tempurature=1):
+def solve_math_problem_stepwise(problem, temperature=1):
     """
     Sends a math problem to the GPT-4o model and retrieves stepwise solutions.
     Uses the SOLVE_MATH_PROBLEM_STEP prompt to enforce structured step-by-step reasoning.
@@ -40,11 +58,13 @@ def solve_math_problem_stepwise(problem, tempurature=1):
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
-        temperature=1  # Lower temperature for more deterministic responses
+        temperature=temperature  # Lower temperature for more deterministic responses
     )
 
     # Extract response text
     response_text = response.choices[0].message.content
+    #with open("prompts.py", "a") as file:
+    #    file.write(response_text)  # Ensure newline if needed
     return extract_steps(response_text)
 
 def formalize_statement(problem):
@@ -72,14 +92,63 @@ def formalize_statement(problem):
         print("Error: Could not extract Lean code block. Returning Full Expression.")
         return response_text.strip()
 
+def formalize_step(step, curr_proof):
+    # Format the prompt with the given problem
+
+    curr_proof = curr_proof + "\n/-\n" + step + "\n-/\n"
+    #print(proof_with_step)
+
+    prompt = prompts.AUTOFORMALIZE_STEP.format(proof=curr_proof)
+
+    # Query the model
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7
+    )
+
+    # Extract response text
+    response_text = response.choices[0].message.content
+    # Extract LEAN code block
+    lean_expression = re.search(r'```\s*lean(.*?)```', response_text, re.DOTALL)
+    if lean_expression:
+        return curr_proof + lean_expression.group(1).strip()
+    else:
+        print("Error: Could not extract Lean code block. Returning Full Expression.")
+        return response_text.strip()
+print()
 
 if __name__ == "__main__":
     problem_statement = prompts.EXAMPLE_AIME_PROBLEM
-    steps = solve_math_problem_stepwise(problem_statement)
+    print("PROBLEM STATEMENT: " + problem_statement)
+    STEPS_RAW=prompts.STEPS_RAW
+    steps = extract_steps(STEPS_RAW)
+    print("Generating informal solution...")
+    #steps=solve_math_problem_stepwise(problem_statement)
+
+    print(steps)
 
     print("Stepwise Solution:")
     for i, step in enumerate(steps, start=1):
-        print(f"Step {i}: {step}")
+        print("########################################")
+        print(f"{step}")
+        print("########################################")
 
     print("\nFormalized Statement:")
-    print(formalize_statement(problem_statement))
+    curr_proof=prompts.formal_raw
+    print(curr_proof)
+
+    for i, step in enumerate(steps, start=1):
+        curr_proof = formalize_step(step, curr_proof) + "\n"
+        print(curr_proof)
+
+    md = Markdown("```lean4\n"+curr_proof+"```", code_theme="monokai")
+    with Live(md, refresh_per_second=4) as live:
+        live.update(md)
+
+
+    write=True
+    if write:
+        with open("sketch.lean", "w") as file:
+            file.write(curr_proof)  # Ensure newline if needed
+

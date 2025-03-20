@@ -4,13 +4,23 @@ import math
 import random
 
 import prompts
+from config_utils import get_api_key, load_config
 
-model = 'deepseek-reasoner'
-# model = 'gpt-4o'
+# Load config
+try:
+    config = load_config()
+    model = config.get('default_model', 'deepseek-reasoner')
+except FileNotFoundError:
+    model = 'deepseek-reasoner'
+
+# Initialize client based on model
 if model.startswith('deepseek'):
-    client = OpenAI(api_key="", base_url="https://api.deepseek.com")
+    client = OpenAI(
+        api_key=get_api_key('deepseek', config),
+        base_url="https://api.deepseek.com"
+    )
 else:
-    client = OpenAI(api_key="")
+    client = OpenAI(api_key=get_api_key('openai', config))
 
 def extract_answer_value(text):
     """Extracts numeric value from <answer> tags with robust parsing."""
@@ -149,19 +159,20 @@ def calculate_average_mdl(problem, correct_answer, num_samples=10, summaries_per
     }
 
 # Usage example
-result = calculate_average_mdl(
-    problem=(prompts.EXAMPLE_AIME_PROBLEM),
-    correct_answer=60,
-    num_samples=10,
-    summaries_per_answer=2
-)
+if __name__ == "__main__":
+    result = calculate_average_mdl(
+        problem=(prompts.EXAMPLE_AIME_PROBLEM),
+        correct_answer=60,
+        num_samples=10,
+        summaries_per_answer=2
+    )
 
-if result is not None:
-    print(f"""Average MDL per correct answer: {result['average_mdl_nats']:.1f} nats ({result['average_mdl_bits']:.1f} bits)
-Correct answers: {result['correct_answers']}/{result['total_samples']}
+    if result is not None:
+        print(f"""Average MDL per correct answer: {result['average_mdl_nats']:.1f} nats ({result['average_mdl_bits']:.1f} bits)
+    Correct answers: {result['correct_answers']}/{result['total_samples']}
 
-Most frequent concepts:""")
-    for concept, count in result['concept_distribution'][:5]:
-        print(f"- {concept} ({count} mentions)")
-else:
-    print("No correct answers were generated; no concept analysis available.")
+    Most frequent concepts:""")
+        for concept, count in result['concept_distribution'][:5]:
+            print(f"- {concept} ({count} mentions)")
+    else:
+        print("No correct answers were generated; no concept analysis available.")
