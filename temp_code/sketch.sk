@@ -1,0 +1,14 @@
+open BigOperators Real Nat Topology
+
+/- Let $x$, $y$, and $z$ all exceed $1$ and let $w$ be a positive number such that $\log_x w = 24$, $\log_y w = 40$, and $\log_{xyz} w = 12$. Find $\log_z w$. -/
+theorem problem (x y z w : Real) (hx : x > 1) (hy : y > 1) (hz : z > 1) (hw : w > 0)
+  (h1 : log w / log x = 24)
+  (h2 : log w / log y = 40)
+  (h3 : log w / log (x * y * z) = 12) :
+  log w / log z = 60 := by
+have h_log_w_x : log w = 24 * log x := sorry
+have h_log_w_y : log w = 40 * log y := sorry
+have h_log_w_expanded : Real.log w = 12 * (Real.log x + Real.log y + Real.log z) := sorry
+have h_28_log_y : 28 * Real.log y = 12 * (Real.log x + Real.log z) := sorry
+have h_x_yz_rel : Real.log x = Real.log y + Real.log z := sorry
+have h_log_w_z : Real.log w = 60 * Real.log z := sorry
