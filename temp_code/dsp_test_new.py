@@ -14,7 +14,7 @@ def get_project_and_lean_path():
     return cwd, p
 
 
-client = genai.Client(api_key='')
+client = genai.Client(api_key='AIzaSyA4MJWtYBhMQETBpv85m1oq4iXR-Nr0CF8')
 model='gemini-2.5-pro-exp-03-25'
 
 def lean_block_to_tac_list(block):
@@ -96,25 +96,28 @@ if __name__ == '__main__':
         #print(error_msg)
         if fail_tac:
             for i in range(3): # try 3 repairs
-                if '⊢' not in error_msg: # some Lean errors come with the state and some do not
-                    state=unit1.goals[0]
-                    error_msg+="\n"+str(state)
-                    
-                rep = repair_step(fail_tac, error_msg)
-                print(rep)
-                fix_list=lean_block_to_tac_list(rep)
-                print(fix_list)
-                try : 
-                    for tac in fix_list:
-                        print("REPAIR:trying", tac, "on goal")
-                        unit1=server.goal_tactic(unit1, goal_id=0, tactic=tac)
-                        print("REPAIR: success. num goals:", len(unit1.goals))
-                except TacticFailure as e:
-                    fail_tac=tac
-                    error_msg=e.args[0]['tacticErrors'][0]
-                    print(e.args[0]['tacticErrors'][0])
-
-
+                if unit1.goals:
+                    if '⊢' not in error_msg: # some Lean errors come with the state and some do not
+                        state=unit1.goals[0]
+                        error_msg+="\n"+str(state)
+                        
+                    rep = repair_step(fail_tac, error_msg)
+                    print(rep)
+                    fix_list=lean_block_to_tac_list(rep)
+                    print(fix_list)
+                    try : 
+                        for tac in fix_list:
+                            print("REPAIR:trying", tac, "on goal")
+                            unit1=server.goal_tactic(unit1, goal_id=0, tactic=tac)
+                            print("REPAIR: success. num goals:", len(unit1.goals))
+                    except TacticFailure as e:
+                        fail_tac=tac
+                        error_msg=e.args[0]['tacticErrors'][0]
+                        print(e.args[0]['tacticErrors'][0])
+                        
+    
+    with open("confirm", "w") as file:   # load sketch
+        sketch = file.write(f"Done! latest tactic: {tac}")
 
                     
 
