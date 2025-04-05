@@ -62,7 +62,7 @@ if __name__ == '__main__':
     print(f"$PWD: {project_path}")
     print(f"$LEAN_PATH: {lean_path}")
     print("Starting Pantograph server...")
-    server = Server(imports=['Mathlib'], project_path=project_path, lean_path=lean_path)  # initialize server
+    server = Server(imports=['Mathlib'], project_path=project_path, lean_path=lean_path, timeout=240)  # initialize server
 
 
     with open("sketch.sk", "r") as file:   # load sketch
@@ -87,9 +87,10 @@ if __name__ == '__main__':
                 print("success. num goals:", len(unit1.goals))
             except TacticFailure as e:
                 fail_tac=tac
-                error_msg = e.args[0]['tacticErrors'][0] # just as seen in vscode
-                print(fail_tac, "failed with error", error_msg)
-                print('breaking out of solve loop')
+                if e.args[0].get('tacticErrors'):
+                    error_msg = e.args[0]['tacticErrors'][0] # just as seen in vscode
+                    print(fail_tac, "failed with error", error_msg)
+                    print('breaking out of solve loop')
                 break
 
         #print(fail_tac)
@@ -112,9 +113,10 @@ if __name__ == '__main__':
                             print("REPAIR: success. num goals:", len(unit1.goals))
                     except TacticFailure as e:
                         fail_tac=tac
-                        error_msg=e.args[0]['tacticErrors'][0]
-                        print(e.args[0]['tacticErrors'][0])
-                        
+                        if e.args[0].get('tacticErrors'):
+                            error_msg=e.args[0]['tacticErrors'][0]
+                            print(fail_tac, "failed with error", error_msg)
+                            print("exiting repair")
     
     with open("confirm", "w") as file:   # load sketch
         sketch = file.write(f"Done! latest tactic: {tac}")
