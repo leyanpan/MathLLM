@@ -13,7 +13,7 @@ def get_project_and_lean_path():
     return cwd, p
 
 
-client = genai.Client(api_key='AIzaSyA4MJWtYBhMQETBpv85m1oq4iXR-Nr0CF8')
+client = genai.Client(api_key='API-KEY')
 model='gemini-2.5-pro-exp-03-25'
 
 def lean_block_to_tac_list(block):
