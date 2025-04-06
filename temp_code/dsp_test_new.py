@@ -3,11 +3,10 @@
 import subprocess
 from pathlib import Path
 from pantograph.server import Server, TacticFailure
-import requests
-import json
-#from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import re
 from google import genai
+import time 
+import prompts
 def get_project_and_lean_path():
     cwd = Path(__file__).parent.resolve() / 'MathlibProject'
     p = subprocess.check_output(['lake', 'env', 'printenv', 'LEAN_PATH'], cwd=cwd)
@@ -23,33 +22,19 @@ def lean_block_to_tac_list(block):
 
 
 def solve_step(state):
-    prompt="""You are a Lean 4 expert. Please provide a tactic or sequence of tactics to close the following goal. Output ONLY the tactic(s) separated by newlines inside a code block.
-
-```
-{}
-```""".format(state)
+    prompt=prompts.STATE_TO_TACTIC_PROMPT.format(state)
 
     response = client.models.generate_content(
         model=model,
         contents=prompt
     )
-    #print(prompt)
+
     return response.text
 
 
 def repair_step(tac, error):
-    prompt="""You are a Lean 4 expert. I am in the middle of a Lean proof. I am trying to prove a goal, but I am running into an error. In the first block I have the tactic I attempted, and in the following block I have the exact error. Please correct the tactic or provide a sequence of corrected tactics to close the goal, given the error. Output ONLY a singular code block containing the valid sequence of tactics to prove the goal.
+    prompt = prompts.STATE_AND_ERROR_TO_TACTIC_PROMPT.format(tac, error)
 
-```lean
-{}
-```
-
-
-ERROR:
-
-```
-{}
-```""".format(tac, error)
     response = client.models.generate_content(
         model=model,
         contents=prompt
@@ -62,6 +47,8 @@ if __name__ == '__main__':
     print(f"$PWD: {project_path}")
     print(f"$LEAN_PATH: {lean_path}")
     print("Starting Pantograph server...")
+    start_time = time.time()
+
     server = Server(imports=['Mathlib'], project_path=project_path, lean_path=lean_path, timeout=240)  # initialize server
 
 
@@ -117,7 +104,9 @@ if __name__ == '__main__':
                             error_msg=e.args[0]['tacticErrors'][0]
                             print(fail_tac, "failed with error", error_msg)
                             print("exiting repair")
+
     
+    print("TOTAL TIME: ", time.time()-start_time)
     with open("confirm", "w") as file:   # load sketch
         sketch = file.write(f"Done! latest tactic: {tac}")
 

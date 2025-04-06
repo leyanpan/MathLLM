@@ -1,3 +1,24 @@
+STATE_TO_TACTIC_PROMPT = """You are a Lean 4 expert. Please provide a tactic or sequence of tactics to close the following goal. Output ONLY the tactic(s) separated by newlines inside a code block.
+
+```
+{}
+```"""
+
+STATE_AND_ERROR_TO_TACTIC_PROMPT = """You are a Lean 4 expert. I am in the middle of a Lean proof. I am trying to prove a goal, but I am running into an error. In the first block I have the tactic I attempted, and in the following block I have the exact error. Please correct the tactic or provide a sequence of corrected tactics to close the goal, given the error. Output ONLY a singular code block containing the valid sequence of tactics to prove the goal.
+
+```lean
+{}
+```
+
+
+ERROR:
+
+```
+{}
+```"""
+
+
+
 SOLVE_MATH_PROBLEM = """Solve the math problem step by step. Put the final answer in \\boxed{{}}.
 Problem: {problem}"""
 
